@@ -1,0 +1,35 @@
+# Glider data (large binary and ASCII files)
+data/
+
+# Generated output
+output/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Legacy 32-bit Linux ELF binaries
+tools/dinkum/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Claude Code
+.claude/
