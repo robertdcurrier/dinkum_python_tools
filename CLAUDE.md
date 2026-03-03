@@ -21,24 +21,42 @@ conversion, with sensor filtering and merging planned.
   files (300 flight + 300 science). Supports single
   file, batch, and combined `--both` modes.
 
+- `tools/dba_merge.py` — drop-in replacement for the
+  legacy C `dba_merge` binary. Merges flight and
+  science `.dba` files by timestamp into combined
+  output. Rows with matching timestamps are joined;
+  unmatched rows are NaN-padded. Validated bit-exact
+  against 300 reference merged files. Supports single
+  pair (stdout) and batch modes.
+
 ## Running
 
 ```bash
-# Single file to stdout (legacy-compatible)
+# dbd2asc: single file to stdout (legacy-compatible)
 python3 tools/dbd2asc.py -c <cache-dir> file.sbd
 
-# Batch: one type at a time
+# dbd2asc: batch, one type at a time
 python3 tools/dbd2asc.py \
     --input-path data/binary_files/sbd \
     --output-path output/flight \
     --cache-dir data/cache_files
 
-# Batch: both flight and science at once
+# dbd2asc: batch, both flight and science
 python3 tools/dbd2asc.py \
     --input-path data/binary_files \
     --output-path output/dba \
     --cache-dir data/cache_files \
     --both --verbose
+
+# dba_merge: single pair to stdout
+python3 tools/dba_merge.py flight.dba science.dba
+
+# dba_merge: batch all pairs
+python3 tools/dba_merge.py \
+    --flight-path output/flight \
+    --science-path output/science \
+    --output-path output/merged \
+    --verbose
 ```
 
 ## Dependencies
@@ -86,6 +104,7 @@ Batch mode enforces path pairing:
 
 - `tools/` — utility scripts and binaries
   - `dbd2asc.py` — Python binary-to-ASCII converter
+  - `dba_merge.py` — Python flight+science merger
   - `batch_dbd2asc.sh` — shell batch wrapper
   - `the_watcher.py` — filesystem event monitor
   - `dinkum/` — legacy 32-bit Linux ELF binaries
@@ -105,7 +124,6 @@ Batch mode enforces path pairing:
 ## Remaining Tools to Implement
 
 - `dba_sensor_filter` — filter sensors from `.dba`
-- `dba_merge` — merge flight + science `.dba` files
 - `dba_time_filter` — filter `.dba` by time range
 - `rename_dbd_files` — rename raw binary files
 
