@@ -24,9 +24,6 @@ env/
 *.swo
 *~
 
-# Legacy 32-bit Linux ELF binaries
-tools/dinkum/
-
 # OS
 .DS_Store
 Thumbs.db
