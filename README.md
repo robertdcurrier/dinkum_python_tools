@@ -108,12 +108,10 @@ behavior.
 
 ## Dependencies
 
-**Core**: Python 3 standard library only. No external
-packages required for conversion.
+Python 3.6+ required.
 
-**Optional** (for `--verbose` batch output):
 ```bash
-pip install colorama tqdm
+pip install -r requirements.txt
 ```
 
 ## Directory Layout
@@ -144,4 +142,4 @@ data/                  # Test data (not in repo)
 
 ## License
 
-TBD
+MIT License. See [LICENSE](LICENSE) for details.

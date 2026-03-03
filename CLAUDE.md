@@ -43,15 +43,15 @@ python3 tools/dbd2asc.py \
 
 ## Dependencies
 
-### Core (stdlib only)
-- `dbd2asc.py` has zero external dependencies for
-  single-file conversion
+See `requirements.txt`. Install with:
+```bash
+pip install -r requirements.txt
+```
 
-### Optional
-- `colorama` — colored terminal output (--verbose)
-- `tqdm` — progress bars (--verbose)
+- `colorama` — colored terminal output
+- `tqdm` — progress bars
 - `pyinotify` — Linux-only filesystem monitoring
-  (the_watcher.py)
+  (the_watcher.py only)
 
 ## Architecture
 
