@@ -177,7 +177,6 @@ tools/
   dbd2asc.py           # Python binary-to-ASCII converter
   dba_merge.py         # Python flight+science merger
   batch_dbd2asc.sh     # Shell batch wrapper
-  the_watcher.py       # Filesystem event monitor
   dinkum/              # Legacy C binaries (reference)
 data/                  # Test data (not in repo)
   binary_files/

@@ -68,8 +68,6 @@ pip install -r requirements.txt
 
 - `colorama` — colored terminal output
 - `tqdm` — progress bars
-- `pyinotify` — Linux-only filesystem monitoring
-  (the_watcher.py only)
 
 ## Architecture
 
@@ -106,7 +104,6 @@ Batch mode enforces path pairing:
   - `dbd2asc.py` — Python binary-to-ASCII converter
   - `dba_merge.py` — Python flight+science merger
   - `batch_dbd2asc.sh` — shell batch wrapper
-  - `the_watcher.py` — filesystem event monitor
   - `dinkum/` — legacy 32-bit Linux ELF binaries
     (reference implementations):
     - `dbd2asc` / `dbd2asc_24` — binary to ASCII

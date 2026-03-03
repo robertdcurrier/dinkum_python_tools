@@ -358,7 +358,7 @@ def _convert_batch(pairs, out_dir, verbose):
         try:
             _merge_one(fpath, spath, out_path)
             ok += 1
-        except Exception as e:
+        except (OSError, ValueError, KeyError) as e:
             fail += 1
             name = os.path.splitext(base)[0]
             _report_failure(name, e, verbose)

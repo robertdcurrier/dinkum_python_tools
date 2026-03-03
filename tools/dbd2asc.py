@@ -187,7 +187,7 @@ def format_value(val, byte_size):
 
 
 def build_output_header(
-    header, sensors, suppress_keys, segment_names
+    header, sensors, segment_names
 ):
     """Build the DBA ASCII output header lines.
 
@@ -263,7 +263,7 @@ def write_data_row(out, current_vals, sensors):
 
 
 def convert_files(
-    filepaths, cache_dir, output_initial, suppress_keys
+    filepaths, cache_dir, output_initial, out=None
 ):
     """Convert one or more binary files to ASCII.
 
@@ -271,11 +271,13 @@ def convert_files(
     file in order. The header uses the first file's info
     with all files listed as segments.
     """
+    if out is None:
+        out = sys.stdout
     segment_names = [
         _get_full_filename(fp) for fp in filepaths
     ]
     header_written = False
-    for i, filepath in enumerate(filepaths):
+    for filepath in filepaths:
         with open(filepath, 'rb') as f:
             header = parse_header(f)
             sensors = _load_sensors(header, cache_dir, f)
@@ -284,8 +286,8 @@ def convert_files(
             read_known_bytes(f)
             header_written = _process_cycles(
                 f, header, sensors, n, sb,
-                output_initial, suppress_keys,
-                header_written, segment_names,
+                output_initial,
+                header_written, segment_names, out,
             )
 
 
@@ -327,8 +329,8 @@ def _read_inline_sensors(f, header):
 
 def _process_cycles(
     f, header, sensors, n_sensors,
-    state_bytes, output_initial, suppress_keys,
-    header_written, segment_names,
+    state_bytes, output_initial,
+    header_written, segment_names, out,
 ):
     """Read and output all data cycles.
 
@@ -340,7 +342,7 @@ def _process_cycles(
         result = read_cycle(f, sensors, state_bytes)
         if result is None:
             break
-        tag, states, values = result
+        _, states, values = result
         row = _build_row(last_known, states, values)
         if first_cycle:
             first_cycle = False
@@ -348,14 +350,12 @@ def _process_cycles(
                 continue
         if not header_written:
             header_written = _write_header(
-                header, sensors,
-                suppress_keys, segment_names,
+                header, sensors, segment_names, out,
             )
-        write_data_row(sys.stdout, row, sensors)
+        write_data_row(out, row, sensors)
     if not header_written and not first_cycle:
         header_written = _write_header(
-            header, sensors,
-            suppress_keys, segment_names,
+            header, sensors, segment_names, out,
         )
     return header_written
 
@@ -381,15 +381,15 @@ def _build_row(last_known, states, values):
 
 
 def _write_header(
-    header, sensors, suppress_keys, segment_names
+    header, sensors, segment_names, out
 ):
     """Write DBA header and sensor label lines."""
     lines = build_output_header(
-        header, sensors, suppress_keys, segment_names
+        header, sensors, segment_names
     )
     for line in lines:
-        sys.stdout.write(line + '\n')
-    write_sensor_lines(sys.stdout, sensors)
+        out.write(line + '\n')
+    write_sensor_lines(out, sensors)
     return True
 
 
@@ -435,6 +435,12 @@ def _create_parser():
         default=None,
         help='Cache directory for .cac files'
     )
+    _add_batch_args(p)
+    return p
+
+
+def _add_batch_args(p):
+    """Add batch mode arguments to the parser."""
     p.add_argument(
         '--input-path', metavar='DIR',
         help='Input directory of binary files'
@@ -451,7 +457,6 @@ def _create_parser():
         '-v', '--verbose', action='store_true',
         help='Show progress bar and colored output'
     )
-    return p
 
 
 def main():
@@ -468,9 +473,7 @@ def _run_single(args):
     filepaths = _collect_filepaths(args)
     cache_dir = _resolve_cache_dir(args.cache_dir)
     filepaths = sort_files_by_time(filepaths)
-    convert_files(
-        filepaths, cache_dir, args.o, args.k
-    )
+    convert_files(filepaths, cache_dir, args.o)
 
 
 def _validate_paths(input_path, output_path):
@@ -498,43 +501,51 @@ def _validate_paths(input_path, output_path):
         sys.exit(1)
 
 
-def _run_both(args):
-    """Process both sbd->flight and tbd->science."""
-    if args.verbose and not HAS_EXTRAS:
+def _require_extras():
+    """Exit if colorama/tqdm are not installed."""
+    if not HAS_EXTRAS:
         print(
             'Install colorama and tqdm for --verbose',
             file=sys.stderr,
         )
         sys.exit(1)
+
+
+def _run_both(args):
+    """Process both sbd->flight and tbd->science."""
+    if args.verbose:
+        _require_extras()
     cache_dir = _resolve_cache_dir(args.cache_dir)
     pairs = [('sbd', 'flight'), ('tbd', 'science')]
     total_ok = total_fail = 0
     for sub_in, sub_out in pairs:
-        in_dir = os.path.join(
-            args.input_path, sub_in
-        )
-        out_dir = os.path.join(
-            args.output_path, sub_out
-        )
-        if not os.path.isdir(in_dir):
-            continue
-        files = sorted(
-            glob.glob(os.path.join(in_dir, '*.*bd'))
-        )
-        if not files:
-            continue
-        os.makedirs(out_dir, exist_ok=True)
-        label = f'{sub_in} -> {sub_out}'
-        if args.verbose:
-            print(f'\n{label}')
-        ok, fail = _convert_batch(
-            files, out_dir, cache_dir,
-            args.o, args.k, args.verbose,
+        ok, fail = _run_both_pair(
+            args, cache_dir, sub_in, sub_out
         )
         total_ok += ok
         total_fail += fail
     _print_summary(
         total_ok, total_fail, args.verbose
+    )
+
+
+def _run_both_pair(args, cache_dir, sub_in, sub_out):
+    """Process one sbd/tbd pair for --both mode."""
+    in_dir = os.path.join(args.input_path, sub_in)
+    out_dir = os.path.join(args.output_path, sub_out)
+    if not os.path.isdir(in_dir):
+        return 0, 0
+    files = sorted(
+        glob.glob(os.path.join(in_dir, '*.*bd'))
+    )
+    if not files:
+        return 0, 0
+    os.makedirs(out_dir, exist_ok=True)
+    if args.verbose:
+        print(f'\n{sub_in} -> {sub_out}')
+    return _convert_batch(
+        files, out_dir, cache_dir,
+        args.o, args.verbose,
     )
 
 
@@ -550,12 +561,8 @@ def _run_batch(args):
         _run_both(args)
         return
     _validate_paths(args.input_path, args.output_path)
-    if args.verbose and not HAS_EXTRAS:
-        print(
-            'Install colorama and tqdm for --verbose',
-            file=sys.stderr,
-        )
-        sys.exit(1)
+    if args.verbose:
+        _require_extras()
     cache_dir = _resolve_cache_dir(args.cache_dir)
     pattern = os.path.join(args.input_path, '*.*bd')
     files = sorted(glob.glob(pattern))
@@ -568,14 +575,13 @@ def _run_batch(args):
     os.makedirs(args.output_path, exist_ok=True)
     ok, fail = _convert_batch(
         files, args.output_path, cache_dir,
-        args.o, args.k, args.verbose,
+        args.o, args.verbose,
     )
     _print_summary(ok, fail, args.verbose)
 
 
 def _convert_batch(files, output_path, cache_dir,
-                   output_initial, suppress_keys,
-                   verbose):
+                   output_initial, verbose):
     """Convert files in batch, return (ok, fail)."""
     if verbose:
         colorama_init()
@@ -594,29 +600,23 @@ def _convert_batch(files, output_path, cache_dir,
         )
         try:
             _convert_one(
-                f, out, cache_dir,
-                output_initial, suppress_keys,
+                f, out, cache_dir, output_initial,
             )
             ok += 1
-        except Exception as e:
+        except (OSError, ValueError, KeyError) as e:
             fail += 1
             _report_failure(base, e, verbose)
     return ok, fail
 
 
 def _convert_one(filepath, out_path, cache_dir,
-                 output_initial, suppress_keys):
+                 output_initial):
     """Convert a single binary file to .dba."""
-    old_stdout = sys.stdout
-    try:
-        with open(out_path, 'w') as out:
-            sys.stdout = out
-            convert_files(
-                [filepath], cache_dir,
-                output_initial, suppress_keys,
-            )
-    finally:
-        sys.stdout = old_stdout
+    with open(out_path, 'w') as out:
+        convert_files(
+            [filepath], cache_dir,
+            output_initial, out,
+        )
 
 
 def _report_failure(base, error, verbose):
