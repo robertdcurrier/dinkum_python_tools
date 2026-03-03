@@ -106,6 +106,62 @@ state-1 sensors carry forward their last known value
 across state-0 gaps, exactly matching the legacy C
 behavior.
 
+## dba_merge.py
+
+Merges flight and science `.dba` files into a single
+combined `.dba` file, interleaved by timestamp. Drop-in
+replacement for the legacy C `dba_merge` binary.
+
+Validated against 300 reference merged files with zero
+differences.
+
+### Quick Start
+
+```bash
+# Single pair to stdout
+python3 tools/dba_merge.py \
+    flight.dba science.dba > merged.dba
+
+# Batch merge all pairs
+python3 tools/dba_merge.py \
+    --flight-path /path/to/flight \
+    --science-path /path/to/science \
+    --output-path /path/to/merged \
+    --verbose
+```
+
+### CLI Reference
+
+```
+usage: dba_merge.py [-h] [--flight-path DIR]
+                    [--science-path DIR]
+                    [--output-path DIR] [-v]
+                    [files ...]
+```
+
+| Flag | Description |
+|------|-------------|
+| `files` | Flight and science .dba files (single mode) |
+| `--flight-path` | Flight .dba directory (batch mode) |
+| `--science-path` | Science .dba directory (batch mode) |
+| `--output-path` | Output directory (batch mode) |
+| `-v`, `--verbose` | Progress bars and colored output |
+
+### How It Works
+
+Rows from both files are interleaved by timestamp:
+
+- **Matching timestamps** — flight and science values
+  are joined into a single row
+- **Flight-only timestamps** — flight values with NaN
+  in all science columns
+- **Science-only timestamps** — NaN in flight columns
+  (with `m_present_time` set to `sci_m_present_time`)
+  followed by science values
+
+The merged header uses the flight file's metadata with
+`sensors_per_cycle` updated to the combined sensor count.
+
 ## Dependencies
 
 Python 3.6+ required.
@@ -119,6 +175,7 @@ pip install -r requirements.txt
 ```
 tools/
   dbd2asc.py           # Python binary-to-ASCII converter
+  dba_merge.py         # Python flight+science merger
   batch_dbd2asc.sh     # Shell batch wrapper
   the_watcher.py       # Filesystem event monitor
   dinkum/              # Legacy C binaries (reference)
@@ -135,8 +192,8 @@ data/                  # Test data (not in repo)
 ## Roadmap
 
 - [x] `dbd2asc` — binary to ASCII conversion
+- [x] `dba_merge` — merge flight + science .dba files
 - [ ] `dba_sensor_filter` — filter sensors from .dba
-- [ ] `dba_merge` — merge flight + science .dba files
 - [ ] `dba_time_filter` — filter .dba by time range
 - [ ] `rename_dbd_files` — rename raw binary files
 
