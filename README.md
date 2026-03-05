@@ -192,9 +192,11 @@ data/                  # Test data (not in repo)
 
 - [x] `dbd2asc` — binary to ASCII conversion
 - [x] `dba_merge` — merge flight + science .dba files
-- [ ] `dba_sensor_filter` — filter sensors from .dba
-- [ ] `dba_time_filter` — filter .dba by time range
 - [ ] `rename_dbd_files` — rename raw binary files
+- ~~`dba_sensor_filter`~~ — not needed; handled via
+  JSONB queries in PostgreSQL
+- ~~`dba_time_filter`~~ — not needed; handled via SQL
+  WHERE clauses in PostgreSQL
 
 ## License
 

@@ -10,7 +10,13 @@ Dinkum Python Tools — pure Python replacements for the
 legacy Dinkum C binary tools used in the Gandalf backend
 for processing Slocum underwater glider data. Handles
 the pipeline from binary glider telemetry to ASCII
-conversion, with sensor filtering and merging planned.
+conversion and merging.
+
+Downstream, merged DBA files are ingested by the Olorin
+platform (~/src/olorin) where all sensor data is stored
+as JSONB in a PostGIS/TimescaleDB database. Sensor and
+time filtering are handled via SQL queries in Olorin,
+making standalone filter tools unnecessary.
 
 ## Completed Tools
 
@@ -120,9 +126,14 @@ Batch mode enforces path pairing:
 
 ## Remaining Tools to Implement
 
-- `dba_sensor_filter` — filter sensors from `.dba`
-- `dba_time_filter` — filter `.dba` by time range
 - `rename_dbd_files` — rename raw binary files
+
+## Deliberately Not Implementing
+
+- `dba_sensor_filter` — not needed; sensor filtering
+  is handled via JSONB queries in Olorin's PostGIS DB
+- `dba_time_filter` — not needed; time filtering is a
+  simple SQL WHERE clause in Olorin
 
 ## Conventions
 
