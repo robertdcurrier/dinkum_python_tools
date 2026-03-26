@@ -63,7 +63,8 @@ usage: dbd2asc.py [-h] [-s] [-o] [-k] [-c PATH]
 | `-k` | Suppress optional header keys |
 | `--input-path` | Input directory for batch mode |
 | `--output-path` | Output directory for batch mode |
-| `--both` | Process all flight/science type pairs |
+| `--both` | Process sbd->flight and tbd->science |
+| `--full` | Include dbd/ebd (full-resolution) files |
 | `-v`, `--verbose` | Progress bars and colored output |
 
 ### Batch Mode
@@ -80,8 +81,9 @@ python3 tools/dbd2asc.py \
 ```
 
 **Both types** — specify parent directories and use
-`--both`. Automatically maps `sbd/`&`dbd/` to `flight/`
-and `tbd/`&`ebd/` to `science/`:
+`--both`. Maps `sbd/`->`flight/` and `tbd/`->`science/`.
+Add `--full` to also process `dbd/`->`flight/` and
+`ebd/`->`science/`:
 
 ```bash
 python3 tools/dbd2asc.py \

@@ -105,8 +105,10 @@ Each binary file contains:
 Batch mode enforces path pairing:
 - `sbd`/`dbd` input dir must pair with `flight` output
 - `tbd`/`ebd` input dir must pair with `science` output
-- `--both` mode auto-maps `sbd/`&`dbd/`->`flight/`
-  and `tbd/`&`ebd/`->`science/`
+- `--both` mode auto-maps `sbd/`->`flight/` and
+  `tbd/`->`science/`
+- `--both --full` also processes `dbd/`->`flight/`
+  and `ebd/`->`science/`
 
 ### Directory Layout
 

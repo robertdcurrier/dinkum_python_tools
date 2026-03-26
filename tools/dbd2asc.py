@@ -452,7 +452,11 @@ def _add_batch_args(p):
     )
     p.add_argument(
         '--both', action='store_true',
-        help='Process all flight/science type pairs'
+        help='Process sbd->flight and tbd->science'
+    )
+    p.add_argument(
+        '--full', action='store_true',
+        help='Include dbd/ebd (full-resolution) files'
     )
     p.add_argument(
         '-v', '--verbose', action='store_true',
@@ -517,14 +521,13 @@ def _require_extras():
 
 
 def _run_both(args):
-    """Process all flight/science type pairs found."""
+    """Process sbd/tbd, and dbd/ebd if --full."""
     if args.verbose:
         _require_extras()
     cache_dir = _resolve_cache_dir(args.cache_dir)
-    pairs = [
-        ('sbd', 'flight'), ('tbd', 'science'),
-        ('dbd', 'flight'), ('ebd', 'science'),
-    ]
+    pairs = [('sbd', 'flight'), ('tbd', 'science')]
+    if args.full:
+        pairs += [('dbd', 'flight'), ('ebd', 'science')]
     total_ok = total_fail = 0
     for sub_in, sub_out in pairs:
         ok, fail = _run_both_pair(
