@@ -109,7 +109,6 @@ Batch mode enforces path pairing:
 - `tools/` — utility scripts and binaries
   - `dbd2asc.py` — Python binary-to-ASCII converter
   - `dba_merge.py` — Python flight+science merger
-  - `batch_dbd2asc.sh` — shell batch wrapper
   - `dinkum/` — legacy 32-bit Linux ELF binaries
     (reference implementations):
     - `dbd2asc` / `dbd2asc_24` — binary to ASCII
