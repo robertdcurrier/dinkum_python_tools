@@ -22,10 +22,11 @@ making standalone filter tools unnecessary.
 
 - `tools/dbd2asc.py` — drop-in replacement for the
   legacy C `dbd2asc` binary. Converts Slocum glider
-  binary `.sbd`/`.tbd` segment files to ASCII `.dba`
-  format. Validated bit-exact against 600 reference
-  files (300 flight + 300 science). Supports single
-  file, batch, and combined `--both` modes.
+  binary files to ASCII `.dba` format. Supports
+  segment files (`.sbd`/`.tbd`) and full-resolution
+  files (`.dbd`/`.ebd`). Validated bit-exact against
+  600 reference files. Supports single file, batch,
+  and combined `--both` modes.
 
 - `tools/dba_merge.py` — drop-in replacement for the
   legacy C `dba_merge` binary. Merges flight and
@@ -79,11 +80,14 @@ pip install -r requirements.txt
 
 ### Pipeline
 
-Slocum gliders produce binary segment files (`.sbd`
-for flight, `.tbd` for science). These get converted
-to ASCII `.dba` files, then merged into combined
-flight+science records. Cache files (`.cac`) store
-sensor metadata used during conversion.
+Slocum gliders produce binary files: segment files
+(`.sbd` flight, `.tbd` science) transmitted during
+deployments, and full-resolution files (`.dbd` flight,
+`.ebd` science) recovered post-deployment. Both use
+the same binary format. These get converted to ASCII
+`.dba` files, then merged into combined flight+science
+records. Cache files (`.cac`) store sensor metadata
+used during conversion.
 
 ### Binary Format Details
 
@@ -99,10 +103,10 @@ Each binary file contains:
 ### Path Conventions
 
 Batch mode enforces path pairing:
-- `sbd` input dir must pair with `flight` output dir
-- `tbd` input dir must pair with `science` output dir
-- `--both` mode auto-maps `sbd/`->`flight/` and
-  `tbd/`->`science/`
+- `sbd`/`dbd` input dir must pair with `flight` output
+- `tbd`/`ebd` input dir must pair with `science` output
+- `--both` mode auto-maps `sbd/`&`dbd/`->`flight/`
+  and `tbd/`&`ebd/`->`science/`
 
 ### Directory Layout
 

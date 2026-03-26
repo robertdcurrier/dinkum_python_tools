@@ -9,9 +9,11 @@ that produces bit-exact identical output.
 
 ## dbd2asc.py
 
-Converts Slocum glider binary `.sbd` (flight) and `.tbd`
-(science) segment files to ASCII `.dba` format. Drop-in
-replacement for the legacy C `dbd2asc` binary.
+Converts Slocum glider binary files to ASCII `.dba`
+format. Supports both segment files (`.sbd`/`.tbd`,
+transmitted during deployments) and full-resolution
+files (`.dbd`/`.ebd`, recovered post-deployment).
+Drop-in replacement for the legacy C `dbd2asc` binary.
 
 Validated against 600 reference files (300 flight +
 300 science) with zero differences.
@@ -54,21 +56,21 @@ usage: dbd2asc.py [-h] [-s] [-o] [-k] [-c PATH]
 
 | Flag | Description |
 |------|-------------|
-| `files` | Binary .sbd/.tbd files (single mode) |
+| `files` | Binary .sbd/.tbd/.dbd/.ebd files |
 | `-c`, `--cache-dir` | Directory containing .cac files |
 | `-s` | Read filenames from stdin |
 | `-o` | Include initial data cycle in output |
 | `-k` | Suppress optional header keys |
 | `--input-path` | Input directory for batch mode |
 | `--output-path` | Output directory for batch mode |
-| `--both` | Process sbd->flight and tbd->science |
+| `--both` | Process all flight/science type pairs |
 | `-v`, `--verbose` | Progress bars and colored output |
 
 ### Batch Mode
 
 **Single type** — specify the exact input and output
-directories. Path validation ensures sbd pairs with
-flight and tbd pairs with science:
+directories. Path validation ensures sbd/dbd pairs with
+flight and tbd/ebd pairs with science:
 
 ```bash
 python3 tools/dbd2asc.py \
@@ -78,8 +80,8 @@ python3 tools/dbd2asc.py \
 ```
 
 **Both types** — specify parent directories and use
-`--both`. Automatically maps `sbd/` to `flight/` and
-`tbd/` to `science/`:
+`--both`. Automatically maps `sbd/`&`dbd/` to `flight/`
+and `tbd/`&`ebd/` to `science/`:
 
 ```bash
 python3 tools/dbd2asc.py \
@@ -91,7 +93,8 @@ python3 tools/dbd2asc.py \
 
 ### How It Works
 
-Slocum gliders encode sensor data in binary segment files
+Slocum gliders encode sensor data in binary files
+(segment `.sbd`/`.tbd` or full-resolution `.dbd`/`.ebd`)
 with a 2-bit-per-sensor state encoding:
 
 | State | Meaning |

@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-"""Convert Slocum glider binary .sbd/.tbd files to ASCII .dba.
+"""Convert Slocum glider binary data files to ASCII .dba.
 
 Replaces the legacy Dinkum C binary dbd2asc tool with a pure
-Python implementation. Reads binary segment files and writes
-human-readable ASCII output to stdout.
+Python implementation. Reads binary segment files (.sbd/.tbd)
+or full-resolution files (.dbd/.ebd) and writes human-readable
+ASCII output to stdout.
 
 Usage:
     dbd2asc.py [-h] [-s] [-o] [-k] [-c cache-path] files...
@@ -416,7 +417,7 @@ def _create_parser():
     )
     p.add_argument(
         'files', nargs='*',
-        help='Binary .sbd/.tbd files to convert'
+        help='Binary .sbd/.tbd/.dbd/.ebd files'
     )
     p.add_argument(
         '-s', action='store_true',
@@ -451,7 +452,7 @@ def _add_batch_args(p):
     )
     p.add_argument(
         '--both', action='store_true',
-        help='Process sbd->flight and tbd->science'
+        help='Process all flight/science type pairs'
     )
     p.add_argument(
         '-v', '--verbose', action='store_true',
@@ -476,25 +477,29 @@ def _run_single(args):
     convert_files(filepaths, cache_dir, args.o)
 
 
+_FLIGHT_DIRS = {'sbd', 'dbd'}
+_SCIENCE_DIRS = {'tbd', 'ebd'}
+
+
 def _validate_paths(input_path, output_path):
     """Verify input/output path pairing is correct.
 
-    sbd input must pair with flight output, and
-    tbd input must pair with science output. Exits
-    with an error if paths are mismatched.
+    Flight input (sbd/dbd) must pair with flight output,
+    science input (tbd/ebd) must pair with science output.
+    Exits with an error if paths are mismatched.
     """
-    inp = input_path.lower()
+    inp = os.path.basename(input_path).lower()
     out = output_path.lower()
-    if 'sbd' in inp and 'flight' not in out:
+    if inp in _FLIGHT_DIRS and 'flight' not in out:
         print(
-            'ERROR: sbd input requires a flight '
+            f'ERROR: {inp} input requires a flight '
             'output path, got: ' + output_path,
             file=sys.stderr,
         )
         sys.exit(1)
-    if 'tbd' in inp and 'science' not in out:
+    if inp in _SCIENCE_DIRS and 'science' not in out:
         print(
-            'ERROR: tbd input requires a science '
+            f'ERROR: {inp} input requires a science '
             'output path, got: ' + output_path,
             file=sys.stderr,
         )
@@ -512,11 +517,14 @@ def _require_extras():
 
 
 def _run_both(args):
-    """Process both sbd->flight and tbd->science."""
+    """Process all flight/science type pairs found."""
     if args.verbose:
         _require_extras()
     cache_dir = _resolve_cache_dir(args.cache_dir)
-    pairs = [('sbd', 'flight'), ('tbd', 'science')]
+    pairs = [
+        ('sbd', 'flight'), ('tbd', 'science'),
+        ('dbd', 'flight'), ('ebd', 'science'),
+    ]
     total_ok = total_fail = 0
     for sub_in, sub_out in pairs:
         ok, fail = _run_both_pair(
@@ -530,7 +538,7 @@ def _run_both(args):
 
 
 def _run_both_pair(args, cache_dir, sub_in, sub_out):
-    """Process one sbd/tbd pair for --both mode."""
+    """Process one input/output type pair for --both."""
     in_dir = os.path.join(args.input_path, sub_in)
     out_dir = os.path.join(args.output_path, sub_out)
     if not os.path.isdir(in_dir):
